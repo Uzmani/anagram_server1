@@ -1,28 +1,24 @@
-class Word < ActiveRecord::Base
+class Word < ActiveRecord::Base 
+
+  before_save :save_canonical_representation
 
   def anagrams
-    dictionary = Word.all.map{ |word| word.word }
-    anagrams = []
-    dictionary.each do |word|
-      anagrams << word if is_anagram?(word)
-    end
-    return anagrams
+    anagrams = Word.where('canonical_representation = ?', generate_canonical_representation)
+    anagrams.map { |anagram| anagram.word }
+  end
+
+  def is_anagram?(other_word)
+    canonical_representation == other_word.canonical_representation
   end
 
   private
 
-  def is_anagram?(other_word)
-    self.word.downcase.split('').sort.join == other_word.downcase.split('').sort.join
+  def save_canonical_representation
+    self.canonical_representation = generate_canonical_representation
   end
 
-  # def anagrams
-  #   anagrams = []
-  #   self.word.split("").permutation do |anagram|
-  #     anagram = anagram.join.downcase
-  #     dict_anagram = Word.where('lower(word) = ?', anagram).first
-  #     anagrams << dict_anagram.word if dict_anagram
-  #   end
-  #   anagrams
-  # end
+  def generate_canonical_representation
+    self.word.downcase.split('').sort.join
+  end
 
 end
